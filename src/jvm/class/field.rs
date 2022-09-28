@@ -1,4 +1,4 @@
-use crate::jvm::{attribute::*, constant::*};
+use crate::jvm::class::{attribute::*, constant::*};
 use crate::utils::bytecode_reader::BytecodeReader;
 
 #[derive(Debug)]

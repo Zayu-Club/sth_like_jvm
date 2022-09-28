@@ -1,19 +1,19 @@
-use crate::jvm::{attribute::*, constant::*, field::*, method::*};
+use crate::jvm::class::{attribute::*, constant::*, field::*, method::*};
 use crate::utils::bytecode_reader::BytecodeReader;
 
 #[derive(Debug)]
 pub struct Class {
-    minor_version: u16,
-    major_version: u16,
-    constant_pool_count: u16,
-    constant_pool: Vec<Constant>,
-    access_flags: u16,
-    this_class: u16,
-    super_class: u16,
-    interfaces: Vec<u16>,
-    fields: Vec<Field>,
-    methods: Vec<Method>,
-    attributes: Vec<Attribute>,
+    pub minor_version: u16,
+    pub major_version: u16,
+    pub constant_pool_count: u16,
+    pub constant_pool: Vec<Constant>,
+    pub access_flags: u16,
+    pub this_class: String,
+    pub super_class: String,
+    pub interfaces: Vec<u16>,
+    pub fields: Vec<Field>,
+    pub methods: Vec<Method>,
+    pub attributes: Vec<Attribute>,
 }
 
 impl Class {
@@ -33,8 +33,26 @@ impl Class {
         }
 
         let access_flags = reader.u16();
-        let this_class = reader.u16();
-        let super_class = reader.u16();
+        let this_class_index = reader.u16();
+        let this_class: String = match &constant_pool[this_class_index as usize - 1] {
+            Constant::Class(constant_class) => {
+                match &constant_pool[constant_class.name_index as usize - 1] {
+                    Constant::Utf8(c) => String::from(&c.bytes),
+                    _ => panic!("read class: wrong name_index."),
+                }
+            }
+            _ => panic!("read class: wrong this_class_index."),
+        };
+        let super_class_index = reader.u16();
+        let super_class: String = match &constant_pool[super_class_index as usize - 1] {
+            Constant::Class(constant_class) => {
+                match &constant_pool[constant_class.name_index as usize - 1] {
+                    Constant::Utf8(c) => String::from(&c.bytes),
+                    _ => panic!("read class: wrong name_index."),
+                }
+            }
+            _ => panic!("read class: wrong this_class_index."),
+        };
 
         let interfaces_count = reader.u16();
         let mut interfaces: Vec<u16> = Vec::new();

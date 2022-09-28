@@ -21,7 +21,7 @@ impl Constant {
         match tag {
             0x1_u8 => {
                 let length = reader.u16();
-                let bytes = reader.read_as_String(length as usize);
+                let bytes = reader.read_as_string(length as usize);
                 return Constant::Utf8(ConstantUtf8 { bytes });
             }
             0x7_u8 => {

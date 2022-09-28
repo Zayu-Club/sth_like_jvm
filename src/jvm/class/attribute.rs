@@ -1,6 +1,6 @@
 use std::vec;
 
-use crate::jvm::{constant::*, field::*, method::*};
+use crate::jvm::class::{constant::*, field::*, method::*};
 use crate::utils::bytecode_reader::BytecodeReader;
 
 #[derive(Debug)]
@@ -9,6 +9,7 @@ pub enum Attribute {
     Code(AttributeCode),
     LineNumberTable(AttributeLineNumberTable),
     SourceFile(AttributeSourceFile),
+    LocalVariableTable(AttributeLocalVariableTable),
 }
 impl Attribute {
     pub fn new(reader: &mut BytecodeReader, constant_pool: &Vec<Constant>) -> Attribute {
@@ -69,6 +70,22 @@ impl Attribute {
                 };
                 return Attribute::SourceFile(AttributeSourceFile { sourcefile });
             }
+            "LocalVariableTable" => {
+                let local_variable_table_length = reader.u16();
+                let mut local_variable_table: Vec<Vec<u16>> = Vec::new();
+                for _ in 0..local_variable_table_length {
+                    local_variable_table.push(vec![
+                        reader.u16(),
+                        reader.u16(),
+                        reader.u16(),
+                        reader.u16(),
+                        reader.u16(),
+                    ]);
+                }
+                return Attribute::LocalVariableTable(AttributeLocalVariableTable {
+                    local_variable_table,
+                });
+            }
             _ => panic!(
                 "read attribute: unsupported attribute name: {}.",
                 attribute_name
@@ -100,4 +117,8 @@ pub struct AttributeLineNumberTable {
 #[derive(Debug)]
 pub struct AttributeSourceFile {
     pub sourcefile: String,
+}
+#[derive(Debug)]
+pub struct AttributeLocalVariableTable {
+    pub local_variable_table: Vec<Vec<u16>>,
 }

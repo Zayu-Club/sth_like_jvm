@@ -1,10 +1,12 @@
 use std::fs::File;
 use std::io::{BufReader, Read, Result};
 
+use zip::read::ZipFile;
+
 pub struct BytecodeReader {
-    offset: usize,
-    size: usize,
-    data: Vec<u8>,
+    pub offset: usize,
+    pub size: usize,
+    pub data: Vec<u8>,
 }
 
 impl BytecodeReader {
@@ -15,9 +17,14 @@ impl BytecodeReader {
             data: raw_data,
         }
     }
-    pub fn read_from_classfile(classfile_path: &str) -> Result<BytecodeReader> {
+    pub fn read_from_file<T>(file: T) -> Result<BytecodeReader>
+    where
+        T: Read,
+    {
         let mut buffer: Vec<u8> = Vec::new();
-        BufReader::new(File::open(classfile_path)?).read_to_end(&mut buffer)?;
+        // let file = File::open(std::path::Path::new(classfile_path))?;
+        let mut reader = BufReader::new(file);
+        reader.read_to_end(&mut buffer)?;
         Ok(BytecodeReader::new(buffer))
     }
 
@@ -35,7 +42,7 @@ impl BytecodeReader {
         v
     }
 
-    pub fn read_as_String(&mut self, step: usize) -> String {
+    pub fn read_as_string(&mut self, step: usize) -> String {
         let utf8 = self.read_as_vec(step);
         let s = String::from_utf8(utf8).unwrap();
         s
