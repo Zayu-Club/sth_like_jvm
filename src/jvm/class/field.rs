@@ -14,16 +14,11 @@ impl Field {
         let access_flags = reader.u16();
 
         let name_index = reader.u16();
-        let name: String = match &constant_pool[name_index as usize - 1] {
-            Constant::Utf8(c) => String::from(&c.bytes),
-            _ => panic!("read field: wrong name_index."),
-        };
+        let name: String = Constant::read_utf8_data(constant_pool, name_index);
 
         let descriptor_index = reader.u16();
-        let descriptor: String = match &constant_pool[descriptor_index as usize - 1] {
-            Constant::Utf8(c) => String::from(&c.bytes),
-            _ => panic!("read field: wrong descriptor_index."),
-        };
+        let descriptor: String = Constant::read_utf8_data(constant_pool, descriptor_index);
+
         let attributes_count = reader.u16();
         let mut attributes: Vec<Attribute> = Vec::new();
         for _ in 0..attributes_count {

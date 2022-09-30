@@ -6,6 +6,8 @@ pub struct Flag {
     // 目录和 zip/jar 文件的类搜索路径
     #[clap(long, value_parser, value_name = "PATH")]
     pub classpath: Option<String>,
+    // #[clap(long, value_parser)]
+    // pub jre: String,
     #[clap(long, value_parser)]
     pub jar: String,
     // // Turn debugging information on

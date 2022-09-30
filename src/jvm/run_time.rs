@@ -1,6 +1,4 @@
-use crate::jvm::class::{class::Class, method::Method};
-
-use super::class::attribute::{self, Attribute, AttributeCode};
+use crate::jvm::class::{method::Method, Class};
 
 pub struct Thread {
     pub pc: usize,
@@ -45,14 +43,14 @@ impl Frame {
     }
 
     fn push_local_variables(&mut self, value: u32) {
-        if (self.local_variables.len() + 1 > self.max_stack) {
+        if self.local_variables.len() + 1 > self.max_stack {
             panic!("push local_variables error.")
         }
         self.local_variables.insert(0, value);
     }
 
     fn push_operand_stacks(&mut self, value: u32) {
-        if (self.operand_stacks.len() + 1 > self.max_stack) {
+        if self.operand_stacks.len() + 1 > self.max_stack {
             panic!("push operand_stacks error.")
         }
         self.operand_stacks.insert(0, value);
@@ -72,5 +70,11 @@ impl Frame {
         };
     }
 
-    pub fn exec(&self) {}
+    pub fn exec(&self) {
+        for ci in 0..self.code.len() {
+            match self.code[ci] {
+                _ => {}
+            }
+        }
+    }
 }

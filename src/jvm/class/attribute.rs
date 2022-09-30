@@ -14,10 +14,8 @@ pub enum Attribute {
 impl Attribute {
     pub fn new(reader: &mut BytecodeReader, constant_pool: &Vec<Constant>) -> Attribute {
         let attribute_name_index = reader.u16();
-        let attribute_name: String = match &constant_pool[attribute_name_index as usize - 1] {
-            Constant::Utf8(c) => String::from(&c.bytes),
-            _ => panic!("read attribute: wrong attribute_name_index."),
-        };
+        let attribute_name: String = Constant::read_utf8_data(constant_pool, attribute_name_index);
+
         let attribute_length = reader.u32();
         match attribute_name.as_str() {
             "ConstantValue" => {
@@ -32,14 +30,18 @@ impl Attribute {
                 let code_length = reader.u32();
                 let code: Vec<u8> = reader.read_as_vec(code_length as usize);
                 let exception_table_length = reader.u16();
-                let mut exception_table: Vec<Vec<u16>> = Vec::new();
+                let mut exception_table: Vec<ExceptionInfo> = Vec::new();
                 for _ in 0..exception_table_length {
-                    exception_table.push(vec![
-                        reader.u16(),
-                        reader.u16(),
-                        reader.u16(),
-                        reader.u16(),
-                    ]);
+                    let start_pc = reader.u16();
+                    let end_pc = reader.u16();
+                    let handler_pc = reader.u16();
+                    let catch_type = reader.u16();
+                    exception_table.push(ExceptionInfo {
+                        start_pc,
+                        end_pc,
+                        handler_pc,
+                        catch_type,
+                    });
                 }
                 let attributes_count = reader.u16();
                 let mut attributes: Vec<Attribute> = Vec::new();
@@ -64,23 +66,29 @@ impl Attribute {
             }
             "SourceFile" => {
                 let sourcefile_index = reader.u16();
-                let sourcefile = match &constant_pool[sourcefile_index as usize - 1] {
-                    Constant::Utf8(c) => String::from(&c.bytes),
-                    _ => panic!("read attribute: wrong sourcefile_index."),
-                };
+                let sourcefile = Constant::read_utf8_data(constant_pool, sourcefile_index);
                 return Attribute::SourceFile(AttributeSourceFile { sourcefile });
             }
             "LocalVariableTable" => {
                 let local_variable_table_length = reader.u16();
-                let mut local_variable_table: Vec<Vec<u16>> = Vec::new();
+                let mut local_variable_table: Vec<LocalVariableInfo> = Vec::new();
                 for _ in 0..local_variable_table_length {
-                    local_variable_table.push(vec![
-                        reader.u16(),
-                        reader.u16(),
-                        reader.u16(),
-                        reader.u16(),
-                        reader.u16(),
-                    ]);
+                    let start_pc = reader.u16();
+                    let length = reader.u16();
+                    let name_index = reader.u16();
+                    let name = Constant::read_utf8_data(constant_pool, name_index);
+                    let descriptor_index = reader.u16();
+                    let descriptor = Constant::read_utf8_data(constant_pool, descriptor_index);
+                    let index = reader.u16();
+
+                    let local_variable_info = LocalVariableInfo {
+                        start_pc,
+                        length,
+                        name,
+                        descriptor,
+                        index,
+                    };
+                    local_variable_table.push(local_variable_info);
                 }
                 return Attribute::LocalVariableTable(AttributeLocalVariableTable {
                     local_variable_table,
@@ -105,8 +113,16 @@ pub struct AttributeCode {
     pub max_stack: u16,
     pub max_locals: u16,
     pub code: Vec<u8>,
-    pub exception_table: Vec<Vec<u16>>,
+    pub exception_table: Vec<ExceptionInfo>,
     pub attributes: Vec<Attribute>,
+}
+
+#[derive(Debug)]
+pub struct ExceptionInfo {
+    pub start_pc: u16,
+    pub end_pc: u16,
+    pub handler_pc: u16,
+    pub catch_type: u16,
 }
 
 #[derive(Debug)]
@@ -120,5 +136,14 @@ pub struct AttributeSourceFile {
 }
 #[derive(Debug)]
 pub struct AttributeLocalVariableTable {
-    pub local_variable_table: Vec<Vec<u16>>,
+    pub local_variable_table: Vec<LocalVariableInfo>,
+}
+
+#[derive(Debug)]
+pub struct LocalVariableInfo {
+    pub start_pc: u16,
+    pub length: u16,
+    pub name: String,
+    pub descriptor: String,
+    pub index: u16,
 }

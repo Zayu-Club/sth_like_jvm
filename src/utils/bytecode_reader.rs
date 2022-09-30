@@ -17,15 +17,13 @@ impl BytecodeReader {
             data: raw_data,
         }
     }
-    pub fn read_from_file<T>(file: T) -> Result<BytecodeReader>
+    pub fn read_from_file<T>(file: T) -> BytecodeReader
     where
         T: Read,
     {
         let mut buffer: Vec<u8> = Vec::new();
-        // let file = File::open(std::path::Path::new(classfile_path))?;
-        let mut reader = BufReader::new(file);
-        reader.read_to_end(&mut buffer)?;
-        Ok(BytecodeReader::new(buffer))
+        BufReader::new(file).read_to_end(&mut buffer);
+        BytecodeReader::new(buffer)
     }
 
     pub fn reset(&mut self) {
