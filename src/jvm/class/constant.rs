@@ -1,6 +1,6 @@
 use crate::utils::bytecode_reader::BytecodeReader;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Constant {
     Utf8(ConstantUtf8),                             // tag: 0x01  1
     Integer(ConstantInteger),                       // tag: 0x03  3
@@ -144,79 +144,80 @@ impl Constant {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ConstantUtf8 {
     pub bytes: String,
 }
-#[derive(Debug)]
+
+#[derive(Debug, Clone)]
 pub struct ConstantInteger {
     pub bytes: i32,
 }
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ConstantFloat {
     pub bytes: f32,
 }
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ConstantLong {
     pub bytes: i64,
 }
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ConstantDouble {
     pub bytes: f64,
 }
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ConstantClass {
     pub name_index: u16,
 }
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ConstantString {
     pub string_index: u16,
 }
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ConstantFieldref {
     pub class_index: u16,
     pub name_and_type_index: u16,
 }
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ConstantMethodref {
     pub class_index: u16,
     pub name_and_type_index: u16,
 }
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ConstantInterfaceMethodref {
     pub class_index: u16,
     pub name_and_type_index: u16,
 }
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ConstantNameAndType {
     pub name_index: u16,
     pub descriptor_index: u16,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ConstantMethodHandle {
     pub reference_kind: u8,
     pub reference_index: u16,
 }
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ConstantMethodType {
     pub descriptor_index: u16,
 }
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ConstantDynamic {
     pub bootstrap_method_attr_index: u16,
     pub name_and_type_index: u16,
 }
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ConstantInvokeDynamic {
     pub bootstrap_method_attr_index: u16,
     pub name_and_type_index: u16,
 }
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ConstantModule {
     pub name_index: u16,
 }
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ConstantPackage {
     pub name_index: u16,
 }

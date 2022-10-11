@@ -1,5 +1,4 @@
 use crate::{jvm::class::Class, utils::parse_manifest};
-use std::io::Result;
 use std::{collections::HashMap, fs, io::BufReader};
 
 pub struct ClassLoader {

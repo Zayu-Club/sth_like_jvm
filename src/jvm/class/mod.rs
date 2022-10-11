@@ -6,18 +6,16 @@ pub mod method;
 use std::io::Read;
 
 use crate::jvm::class::{attribute::*, constant::*, field::*, method::*};
-use crate::utils::bytecode_reader::BytecodeReader;
-use crate::utils::code2name;
+use crate::utils::{bytecode_reader::BytecodeReader, code2name};
 
 #[derive(Debug)]
 pub struct Class {
     pub minor_version: u16,
     pub major_version: u16,
-    pub constant_pool_count: u16,
     pub constant_pool: Vec<Constant>,
     pub access_flags: u16,
     pub this_class: String,
-    pub super_class: Option<Box<Class>>,
+    pub super_class: String,
     pub interfaces: Vec<u16>,
     pub fields: Vec<Field>,
     pub methods: Vec<Method>,
@@ -55,7 +53,7 @@ impl Class {
             _ => panic!("read class: wrong this_class_index."),
         };
         let super_class_index = reader.u16();
-        let super_class_name: String = match &constant_pool[super_class_index as usize - 1] {
+        let super_class: String = match &constant_pool[super_class_index as usize - 1] {
             Constant::Class(constant_class) => {
                 Constant::read_utf8_data(&constant_pool, constant_class.name_index)
             }
@@ -89,11 +87,10 @@ impl Class {
         return Some(Class {
             minor_version,
             major_version,
-            constant_pool_count,
             constant_pool,
             access_flags,
             this_class,
-            super_class: Option::None,
+            super_class,
             interfaces,
             fields,
             methods,
@@ -107,6 +104,12 @@ impl Class {
             println!("{:>3}: {:?}", cpi + 1, self.constant_pool[cpi]);
         }
 
+        println!("--------------------------------------------------");
+        println!("--------------------------------------------------");
+        println!("{:#?}", self);
+        println!("--------------------------------------------------");
+        println!("--------------------------------------------------");
+
         for mi in 0..self.methods.len() {
             println!(
                 ">>> Code {}: {}",
@@ -117,7 +120,7 @@ impl Class {
                     Attribute::Code(attribute_code) => {
                         for ci in 0..attribute_code.code.len() {
                             println!(
-                                "    <{0:0>3}|0x{0:0>2X}> ==> {1}",
+                                "    <{0:>3}|0x{0:0>2X}> ==> {1}",
                                 attribute_code.code[ci],
                                 code2name(attribute_code.code[ci]),
                             );

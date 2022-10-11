@@ -5,14 +5,16 @@ mod utils;
 use clap::Parser;
 use flag::Flag;
 use jvm::{class::Class, run_time::*};
-use std::collections::HashMap;
-use std::io::Result;
-use std::{fs, io::BufReader};
+use std::{
+    collections::HashMap,
+    fs,
+    io::{BufReader, Result},
+};
 use utils::parse_manifest;
 
 use crate::jvm::class_loader::ClassLoader;
 
-fn main() -> Result<()> {
+fn main() {
     println!("########## start ##########");
     let flag = Flag::parse();
 
@@ -25,7 +27,9 @@ fn main() -> Result<()> {
         .unwrap();
     main_class.show_info();
 
-    let thread = Thread::new();
+    // println!("{}", 246_u8 as i8 as u32 as i32);
 
-    Ok(())
+    let mut thread = Thread::new();
+    let mut frame = Frame::invoke_from_method_name(main_class, String::from("main"));
+    frame.exec();
 }

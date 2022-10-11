@@ -1,7 +1,4 @@
-use std::fs::File;
-use std::io::{BufReader, Read, Result};
-
-use zip::read::ZipFile;
+use std::io::{BufReader, Read};
 
 pub struct BytecodeReader {
     pub offset: usize,
