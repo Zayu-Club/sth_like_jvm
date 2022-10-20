@@ -22,10 +22,9 @@ impl Thread {
     }
 
     pub fn invoke_from_method_name(&mut self, class_name: String, method_name: String) {
+        println!(">>> Load {} - {}", class_name, method_name);
         let class_map = &self.class_map;
         let class = class_map.get(&class_name.replace(".", "/")).unwrap();
-
-        println!(">>> Load {} - {}", class_name, method_name);
 
         for mi in 0..class.methods.len() {
             if method_name == class.methods[mi].name {
@@ -146,7 +145,12 @@ impl Thread {
                     }
                 }
             }
-
+            026_u8 => {}
+            027_u8 => {}
+            087_u8 => {}
+            096_u8 => {}
+            172_u8 => {}
+            177_u8 => {}
             184_u8 => {
                 let static_method_index =
                     (((top_frame.read_code() as u32) << 8) | top_frame.read_code() as u32) as usize;
@@ -157,18 +161,64 @@ impl Thread {
                     .constant_pool[static_method_index - 1];
                 match constant {
                     Constant::Methodref(m) => {
-                        let const_class = &self
+                        let mut class_name: String;
+                        let mut name: String;
+                        let mut descriptor: String;
+                        match &self
                             .class_map
                             .get(&top_frame.class_name)
                             .unwrap()
-                            .constant_pool[m.class_index as usize - 1];
-                        let const_name_and_type = &self
+                            .constant_pool[m.class_index as usize - 1]
+                        {
+                            Constant::Class(c) => {
+                                match &self
+                                    .class_map
+                                    .get(&top_frame.class_name)
+                                    .unwrap()
+                                    .constant_pool[c.name_index as usize - 1]
+                                {
+                                    Constant::Utf8(u) => {
+                                        class_name = String::from(&u.bytes);
+                                    }
+                                    _ => panic!("Wrong index."),
+                                }
+                            }
+                            _ => panic!("Wrong index."),
+                        }
+                        match &self
                             .class_map
                             .get(&top_frame.class_name)
                             .unwrap()
-                            .constant_pool[m.name_and_type_index as usize - 1];
-                        println!(">>> {const_class:#?} \n{const_name_and_type:#?}");
-                        todo!();
+                            .constant_pool[m.name_and_type_index as usize - 1]
+                        {
+                            Constant::NameAndType(nt) => {
+                                match &self
+                                    .class_map
+                                    .get(&top_frame.class_name)
+                                    .unwrap()
+                                    .constant_pool[nt.name_index as usize - 1]
+                                {
+                                    Constant::Utf8(u) => {
+                                        name = String::from(&u.bytes);
+                                    }
+                                    _ => panic!("Wrong index."),
+                                }
+                                match &self
+                                    .class_map
+                                    .get(&top_frame.class_name)
+                                    .unwrap()
+                                    .constant_pool
+                                    [nt.descriptor_index as usize - 1]
+                                {
+                                    Constant::Utf8(u) => {
+                                        descriptor = String::from(&u.bytes);
+                                    }
+                                    _ => panic!("Wrong index."),
+                                }
+                            }
+                            _ => panic!("Wrong index."),
+                        }
+                        self.invoke_from_method_name(class_name, name);
                     }
                     _ => {
                         panic!(

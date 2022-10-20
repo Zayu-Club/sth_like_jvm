@@ -18,7 +18,8 @@ fn main() {
 
     class_loader
         .class_map
-        .get(&main_class_name.replace(".", "/"))
+        // .get(&main_class_name.replace(".", "/"))
+        .get(&String::from("org/example/Add"))
         .unwrap()
         .show_info();
     let mut thread = Thread::new(class_loader.class_map);
