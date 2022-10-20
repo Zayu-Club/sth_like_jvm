@@ -28,7 +28,7 @@ impl BytecodeReader {
     }
 
     pub fn read_as_vec(&mut self, step: usize) -> Vec<u8> {
-        let mut end: usize = self.offset + step;
+        let end: usize = self.offset + step;
         if end > self.size {
             panic!("BytecodeReader: incorrect length.")
         }

@@ -1,6 +1,6 @@
 use std::vec;
 
-use crate::jvm::class::{constant::*, field::*, method::*};
+use crate::jvm::class::constant::*;
 use crate::utils::bytecode_reader::BytecodeReader;
 
 #[derive(Debug)]
@@ -16,7 +16,7 @@ impl Attribute {
         let attribute_name_index = reader.u16();
         let attribute_name: String = Constant::read_utf8_data(constant_pool, attribute_name_index);
 
-        let attribute_length = reader.u32();
+        let _attribute_length = reader.u32();
         match attribute_name.as_str() {
             "ConstantValue" => {
                 let constantvalue_index = reader.u16();
