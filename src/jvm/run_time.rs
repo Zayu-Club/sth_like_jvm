@@ -1,13 +1,14 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, hash::Hash};
 
-use crate::jvm::class::{attribute::*, constant::*, method::*, Class};
+use crate::{
+    jvm::class::{attribute::*, constant::*, Class},
+    utils::code2name,
+};
 
 pub struct Thread {
     pub pc: usize,
     pub class_map: HashMap<String, Class>,
     pub stacks: Vec<Frame>,
-    pub local_variables: Vec<Option<u32>>,
-    pub operand_stacks: Vec<Option<u32>>,
 }
 
 impl Thread {
@@ -16,13 +17,11 @@ impl Thread {
             pc: 0,
             class_map,
             stacks: Vec::new(),
-            local_variables: Vec::new(),
-            operand_stacks: Vec::new(),
         };
     }
 
     pub fn invoke_from_method_name(&mut self, class_name: String, method_name: String) {
-        println!(">>> Load {} - {}", class_name, method_name);
+        println!(">>> Load {}.{}", class_name, method_name);
         let class_map = &self.class_map;
         let class = class_map.get(&class_name.replace(".", "/")).unwrap();
 
@@ -32,11 +31,20 @@ impl Thread {
                 for ai in 0..method.attributes.len() {
                     match &method.attributes[ai] {
                         Attribute::Code(a) => {
-                            let f = Frame {
+                            let mut f = Frame {
                                 class_name: String::from(&class.this_class),
                                 pc: 0,
                                 code: a.code.clone(),
+                                local_variables: Vec::new(),
+                                operand_stacks: Vec::new(),
                             };
+                            match self.stacks.last_mut() {
+                                Some(frame) => {
+                                    f.local_variables.append(&mut frame.operand_stacks);
+                                }
+                                None => {}
+                            }
+
                             self.stacks.push(f);
                             return;
                         }
@@ -55,7 +63,7 @@ impl Thread {
         };
     }
 
-    pub fn run(&mut self) {
+    pub fn run(&mut self, args: Vec<String>) {
         println!(">>> BEGIN <<<");
         while self.stacks.len() != 0 {
             let top_frame = self.stacks.last_mut().unwrap();
@@ -71,58 +79,63 @@ impl Thread {
     pub fn exec(&mut self) {
         let top_frame = self.stacks.last_mut().unwrap();
         let code = top_frame.read_code();
-        println!(">>> [{code:0>3}]");
+        println!(
+            ">>> [{code:0>3}]@{} {}",
+            top_frame.class_name,
+            code2name(code)
+        );
         match code {
             000_u8 => { /* do nothing */ }
             001_u8 => {
                 // push null
-                self.operand_stacks.push(Option::None);
+                top_frame.operand_stacks.push(Option::None);
             }
             002_u8 => {
                 // iconst_m1
                 let value = -1_i32 as u32;
-                self.operand_stacks.push(Some(value));
+                top_frame.operand_stacks.push(Some(value));
             }
             003_u8 => {
                 // iconst_0
                 let value = 0_i32 as u32;
-                self.operand_stacks.push(Some(value));
+                top_frame.operand_stacks.push(Some(value));
             }
             004_u8 => {
                 // iconst_1
                 let value = 1_i32 as u32;
-                self.operand_stacks.push(Some(value));
+                top_frame.operand_stacks.push(Some(value));
             }
             005_u8 => {
                 // iconst_2
                 let value = 2_i32 as u32;
-                self.operand_stacks.push(Some(value));
+                top_frame.operand_stacks.push(Some(value));
             }
             006_u8 => {
                 // iconst_3
                 let value = 3_i32 as u32;
-                self.operand_stacks.push(Some(value));
+                top_frame.operand_stacks.push(Some(value));
             }
             007_u8 => {
                 // iconst_4
                 let value = 4_i32 as u32;
-                self.operand_stacks.push(Some(value));
+                top_frame.operand_stacks.push(Some(value));
             }
             008_u8 => {
                 // iconst_5
                 let value = 5_i32 as u32;
-                self.operand_stacks.push(Some(value));
+                top_frame.operand_stacks.push(Some(value));
             }
             016_u8 => {
                 // bipush
                 let value: u32 = top_frame.read_code() as i8 as u32;
-                self.operand_stacks.push(Some(value));
+                top_frame.operand_stacks.push(Some(value));
+                println!("self.operand_stacks: {:?}", top_frame.operand_stacks);
             }
             017_u8 => {
                 // sipush
                 let value: u32 =
                     ((top_frame.read_code() as u32) << 8) | top_frame.read_code() as u32;
-                self.operand_stacks.push(Some(value));
+                top_frame.operand_stacks.push(Some(value));
             }
             018_u8 => {
                 // ldc
@@ -134,7 +147,7 @@ impl Thread {
                     .constant_pool[const_pool_index - 1];
                 match constant {
                     Constant::Integer(i) => {
-                        self.operand_stacks.push(Some(i.bytes as u32));
+                        top_frame.operand_stacks.push(Some(i.bytes as u32));
                     }
                     _ => {
                         panic!(
@@ -145,12 +158,37 @@ impl Thread {
                     }
                 }
             }
-            026_u8 => {}
-            027_u8 => {}
-            087_u8 => {}
-            096_u8 => {}
-            172_u8 => {}
-            177_u8 => {}
+            026_u8 => {
+                top_frame.operand_stacks.push(top_frame.local_variables[0]);
+                println!("self.operand_stacks: {:?}", top_frame.operand_stacks);
+            }
+            027_u8 => {
+                top_frame.operand_stacks.push(top_frame.local_variables[1]);
+                println!("self.operand_stacks: {:?}", top_frame.operand_stacks);
+            }
+            087_u8 => {
+                top_frame.operand_stacks.pop();
+            }
+            096_u8 => {
+                let value1 = top_frame.operand_stacks.pop().unwrap().unwrap();
+                let value2 = top_frame.operand_stacks.pop().unwrap().unwrap();
+                let result = value1 + value2;
+                top_frame.operand_stacks.push(Some(result));
+                println!("self.operand_stacks: {:?}", top_frame.operand_stacks);
+            }
+            172_u8 => {
+                let return_value = top_frame.operand_stacks.pop().unwrap();
+                self.stacks.pop();
+                self.stacks
+                    .last_mut()
+                    .unwrap()
+                    .operand_stacks
+                    .push(return_value);
+            }
+            177_u8 => {
+                // return void
+            }
+            178_u8 => {}
             184_u8 => {
                 let static_method_index =
                     (((top_frame.read_code() as u32) << 8) | top_frame.read_code() as u32) as usize;
@@ -238,6 +276,8 @@ pub struct Frame {
     pub class_name: String,
     pub pc: usize,
     pub code: Vec<u8>,
+    pub local_variables: Vec<Option<u32>>,
+    pub operand_stacks: Vec<Option<u32>>,
 }
 
 impl Frame {
