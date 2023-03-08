@@ -33,6 +33,7 @@ pub fn code2name(code: u8) -> &'static str {
         016_u8 => return "lload            :Load long from local variable",
         026_u8 => return "iload_<0>        :Load int from local variable",
         027_u8 => return "iload_<1>        :Load int from local variable",
+        028_u8 => return "iload_<2>        :Load int from local variable",
         042_u8 => return "aload_<0>        :Load reference from local variable",
         060_u8 => return "istore_<1>       :Store int into local variable",
         087_u8 => return "pop              :Pop the top operand stack value",

@@ -166,6 +166,10 @@ impl Thread {
                 top_frame.operand_stacks.push(top_frame.local_variables[1]);
                 println!("self.operand_stacks: {:?}", top_frame.operand_stacks);
             }
+            028_u8 => {
+                top_frame.operand_stacks.push(top_frame.local_variables[2]);
+                println!("self.operand_stacks: {:?}", top_frame.operand_stacks);
+            }
             087_u8 => {
                 top_frame.operand_stacks.pop();
             }
@@ -188,7 +192,6 @@ impl Thread {
             177_u8 => {
                 // return void
             }
-            178_u8 => {}
             184_u8 => {
                 let static_method_index =
                     (((top_frame.read_code() as u32) << 8) | top_frame.read_code() as u32) as usize;
